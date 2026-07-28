@@ -1,0 +1,27 @@
+# Credentials — never commit
+Secrets.xcconfig
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Keep the shared scheme; ignore per-user ones
+!*.xcodeproj/xcshareddata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/*/\.build/
+
+# macOS
+.DS_Store
