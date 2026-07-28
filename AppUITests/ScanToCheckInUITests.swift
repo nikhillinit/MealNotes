@@ -2,10 +2,16 @@ import XCTest
 
 /// The journey the app exists for, driven through the real interface:
 /// scan → answer a question → see the note → log it → check in → see it in history.
+///
+/// `@MainActor` because every XCUITest API is main-actor isolated; without it
+/// Swift 6 warns on each `app.…` call.
+@MainActor
 final class ScanToCheckInUITests: XCTestCase {
     private var app: XCUIApplication!
 
-    override func setUpWithError() throws {
+    // The `async` overrides rather than the `WithError` ones: those are
+    // nonisolated on `XCTestCase`, so they would not pick up `@MainActor`.
+    override func setUp() async throws {
         continueAfterFailure = false
         app = XCUIApplication()
         // A fresh, session-only store so the test never sees real entries.
@@ -13,7 +19,7 @@ final class ScanToCheckInUITests: XCTestCase {
         app.launch()
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         app = nil
     }
 
@@ -100,6 +106,35 @@ final class ScanToCheckInUITests: XCTestCase {
 
         tap(element("home.history"))
         XCTAssertTrue(app.staticTexts["Leftover curry"].waitForExistence(timeout: 10))
+    }
+
+    /// A correction is the highest-trust thing the app has, and the only way she
+    /// can overrule a wrong guess. Removing the ingredient a note came from must
+    /// take the note with it.
+    func testCorrectingIngredientsRemovesTheNoteItProduced() throws {
+        tap(element("home.scanButton"))
+        tap(element("capture.fixture.caffeinatedTea"))
+
+        let yes = element("clarify.yes")
+        XCTAssertTrue(yes.waitForExistence(timeout: 15), "The clarification question should appear")
+        tap(yes)
+
+        XCTAssertTrue(element("result.itemName").waitForExistence(timeout: 10), "The result should appear")
+        XCTAssertTrue(app.staticTexts["Heads up"].exists, "The caffeine note should be shown before correcting")
+
+        // It was decaf after all.
+        tap(element("result.correct"))
+
+        let caffeine = element("correct.category.caffeine")
+        XCTAssertTrue(caffeine.waitForExistence(timeout: 10), "The correction sheet should list the ingredients")
+        tap(caffeine)
+        tap(element("correct.save"))
+
+        XCTAssertTrue(element("result.itemName").waitForExistence(timeout: 10), "The result should come back")
+        XCTAssertFalse(
+            app.staticTexts["Heads up"].exists,
+            "Removing caffeine should remove the note it produced"
+        )
     }
 
     // MARK: - Helpers

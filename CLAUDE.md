@@ -233,8 +233,9 @@ contents.
 
 `AppTests` (16 tests) drives `ScanFlowModel` through every fixture.
 
-`AppUITests` (2 tests) covers the required journey — scan → clarify → warning →
-log → check-in → history — and the unreadable-photo fallback.
+`AppUITests` (3 tests) covers the required journey — scan → clarify → warning →
+log → check-in → history — the unreadable-photo fallback, and correcting an
+ingredient so the note it produced goes with it.
 
 When adding a rule, add a test for it. When changing copy, run `make test-core`;
 the wording guardrail will tell you immediately.

@@ -20,6 +20,10 @@ Everything is built on frameworks that ship with the platform:
 `Vision`, `VisionKit`, `AVFoundation` and `PhotosUI` are named in the Phase 2
 plan and are not yet linked.
 
+`scripts/make_icon.py` uses Pillow to draw the app icon. That is a tool for
+regenerating a checked-in asset, not a dependency of the app: nothing links it,
+nothing ships it, and neither the build nor the test run needs Python.
+
 ## Guidance the warnings are based on
 
 The app's rules do not copy text from these sources. They paraphrase widely

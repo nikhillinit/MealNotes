@@ -228,8 +228,13 @@ struct CorrectionView: View {
 
                 Section {
                     ForEach(editable, id: \.self) { category in
-                        Toggle(category.displayName, isOn: binding(for: category))
-                            .frame(minHeight: Layout.minimumTouchTarget)
+                        SelectableRow(
+                            title: category.displayName,
+                            isSelected: categories.contains(category),
+                            identifier: "correct.category.\(category.rawValue)"
+                        ) {
+                            toggle(category)
+                        }
                     }
                 } header: {
                     Text("What was in it")
@@ -258,13 +263,8 @@ struct CorrectionView: View {
         }
     }
 
-    private func binding(for category: FoodCategory) -> Binding<Bool> {
-        Binding(
-            get: { categories.contains(category) },
-            set: { isOn in
-                if isOn { categories.insert(category) } else { categories.remove(category) }
-            }
-        )
+    private func toggle(_ category: FoodCategory) {
+        if categories.contains(category) { categories.remove(category) } else { categories.insert(category) }
     }
 }
 

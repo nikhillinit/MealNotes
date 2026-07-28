@@ -127,38 +127,3 @@ struct CheckInView: View {
         if urgentSymptoms.contains(symptom) { urgentSymptoms.remove(symptom) } else { urgentSymptoms.insert(symptom) }
     }
 }
-
-/// A full-width tappable row with a checkmark.
-///
-/// Used instead of a `Toggle` throughout the check-in: the whole row is the
-/// target rather than a small switch at the edge, which matters a great deal for
-/// anyone with less steady hands.
-struct SelectableRow: View {
-    let title: String
-    var systemImage: String?
-    let isSelected: Bool
-    let identifier: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                if let systemImage {
-                    Label(title, systemImage: systemImage)
-                } else {
-                    Text(title)
-                }
-                Spacer(minLength: 12)
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .imageScale(.large)
-                    .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-                    .accessibilityHidden(true)
-            }
-            .frame(minHeight: Layout.minimumTouchTarget)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier(identifier)
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-    }
-}
