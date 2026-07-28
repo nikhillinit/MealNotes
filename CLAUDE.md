@@ -165,6 +165,13 @@ This is the part to be careful with. Read it before touching anything in
    "You have recorded symptoms after caffeine twice before." It cannot change,
    soften or strengthen the baseline note.
 
+10. **Correcting a logged meal does not rewrite what she was shown.**
+    `applyCorrection` changes `displayName` and `facts` and appends to
+    `corrections`; it leaves `shownRuleIDs` alone, because that records what was
+    actually on screen at the time and a later correction does not make that
+    untrue. The patterns *do* follow the correction, since `InsightEngine` counts
+    facts rather than rule ids. `ScanToCheckInUITests` pins both halves.
+
 ### Wording
 
 `SafetyWording.bannedPhrases` is enforced by tests over every rule string, every
@@ -233,9 +240,10 @@ contents.
 
 `AppTests` (16 tests) drives `ScanFlowModel` through every fixture.
 
-`AppUITests` (3 tests) covers the required journey — scan → clarify → warning →
-log → check-in → history — the unreadable-photo fallback, and correcting an
-ingredient so the note it produced goes with it.
+`AppUITests` (4 tests) covers the required journey — scan → clarify → warning →
+log → check-in → history — the unreadable-photo fallback, correcting an
+ingredient before logging so the note it produced goes with it, and correcting a
+meal *after* logging so the record of what was shown survives it.
 
 When adding a rule, add a test for it. When changing copy, run `make test-core`;
 the wording guardrail will tell you immediately.

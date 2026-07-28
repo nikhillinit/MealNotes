@@ -119,6 +119,43 @@ final class AppEnvironment {
         insightEngine.personalNote(for: categories, meals: allMeals())
     }
 
+    /// Corrects a meal that has already been logged, and returns the updated meal.
+    ///
+    /// The notes stay as they were on purpose. `shownRuleIDs` records what she was
+    /// actually shown at the time, and correcting the meal later does not make
+    /// that untrue — so the repository leaves it alone. The facts *do* change, and
+    /// because the insight engine counts facts rather than rule ids, the patterns
+    /// correct themselves from here on.
+    func correctMeal(id: UUID, name: String, categories: Set<FoodCategory>) -> MealSnapshot? {
+        do {
+            guard let meal = try repository.meal(id: id) else {
+                AppLog.store.error("Cannot correct a meal that is not there")
+                return nil
+            }
+
+            // Append the correction as new userCorrection facts rather than
+            // replacing the list, so precedence still decides the outcome and
+            // the later claim wins.
+            let before = Set(meal.facts.filter(\.isPresent).map(\.category))
+            var facts = meal.facts
+            facts.append(contentsOf: categories.subtracting(before).map { FoodFact.confirmed($0, isPresent: true) })
+            facts.append(contentsOf: before.subtracting(categories).map { FoodFact.confirmed($0, isPresent: false) })
+
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let updated = try repository.applyCorrection(
+                mealID: id,
+                newDisplayName: trimmed.isEmpty ? nil : trimmed,
+                newFacts: facts,
+                at: dates.now()
+            )
+            refresh()
+            return updated
+        } catch {
+            AppLog.store.error("Could not correct the meal: \(error, privacy: .public)")
+            return nil
+        }
+    }
+
     // MARK: - Check-ins
 
     func recordCheckIn(

@@ -34,17 +34,18 @@ Discovered rather than assumed:
 ✔ Test run with 111 tests in 14 suites passed after 0.052 seconds.
 ```
 
-## `make test-app` — 19 tests
+## `make test-app` — 20 tests
 
 ```
 ✔ Test run with 16 tests in 2 suites passed after 0.042 seconds.
-Test Case '-[MealNotesUITests.ScanToCheckInUITests testCorrectingIngredientsRemovesTheNoteItProduced]' passed (18.305 seconds).
+Test Case '-[MealNotesUITests.ScanToCheckInUITests testCorrectingALoggedMealKeepsTheNoteItShowedAtTheTime]' passed (30.238 seconds).
+Test Case '-[MealNotesUITests.ScanToCheckInUITests testCorrectingIngredientsRemovesTheNoteItProduced]' passed (19.209 seconds).
 Test Case '-[MealNotesUITests.ScanToCheckInUITests testScanClarifyWarnLogCheckInAndSeeHistory]' passed (35.878 seconds).
 Test Case '-[MealNotesUITests.ScanToCheckInUITests testUnreadablePhotoFallsBackToTypingWithNoNote]' passed (17.311 seconds).
 ** TEST SUCCEEDED **
 ```
 
-From the result bundle: `passedTests: 19, failedTests: 0, skippedTests: 0`, on
+From the result bundle: `passedTests: 20, failedTests: 0, skippedTests: 0`, on
 `iPhone 16` / iOS 26.5 (`B6AD4A29-081E-4A80-8050-F31A327C9819`).
 
 > The `Executed 0 tests` lines in raw `xcodebuild` output are XCTest's counter,

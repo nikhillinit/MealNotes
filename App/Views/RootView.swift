@@ -54,6 +54,10 @@ struct HomeView: View {
 
                 captureActions
 
+                if environment.totalMealCount == 0 {
+                    howItWorks
+                }
+
                 if !environment.recentMeals.isEmpty {
                     recentMeals
                 }
@@ -122,6 +126,31 @@ struct HomeView: View {
         }
     }
 
+    /// Shown only until she has logged something. The half of the loop that is
+    /// invisible on a first run is the check-in that comes back later, so it is
+    /// the part worth saying out loud.
+    private var howItWorks: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("How this works")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+
+            Text("""
+                Take a photo of what you are about to eat or drink. If there is \
+                something worth mentioning, you will see a short note before you \
+                log it. About two hours later the app asks how you felt. Over \
+                time, the answers build up into something you can look back on.
+                """)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: Layout.cornerRadius))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("home.howItWorks")
+    }
+
     private var recentMeals: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Recently")
@@ -135,13 +164,13 @@ struct HomeView: View {
             }
 
             if environment.dueCheckIns.isEmpty {
-                Button("Bring my next check-in forward") {
+                Button("Check in now") {
                     environment.simulateDueCheckIn()
                 }
                 .font(.footnote)
                 .frame(minHeight: Layout.minimumTouchTarget)
                 .accessibilityIdentifier("home.simulateCheckIn")
-                .accessibilityHint("For trying the app out without waiting two hours")
+                .accessibilityHint("Brings your next check-in forward instead of waiting two hours")
             }
         }
     }

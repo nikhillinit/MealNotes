@@ -45,12 +45,23 @@ struct MealDetailView: View {
     @Environment(AppEnvironment.self) private var environment
     let meal: MealSnapshot
 
+    /// Set once she corrects the meal, so the screen shows the corrected version
+    /// without having to go back and come in again.
+    @State private var corrected: MealSnapshot?
+    @State private var showingCorrection = false
+
+    private var current: MealSnapshot { corrected ?? meal }
+
     private var shownRules: [GERDRule] {
-        meal.shownRuleIDs.compactMap { environment.rulesEngine.rule(withID: $0) }
+        current.shownRuleIDs.compactMap { environment.rulesEngine.rule(withID: $0) }
     }
 
     private var confirmed: [FoodFact] {
-        meal.facts.filter { $0.isPresent && $0.isStrongEnoughToWarn }
+        current.facts.filter { $0.isPresent && $0.isStrongEnoughToWarn }
+    }
+
+    private var presentCategories: Set<FoodCategory> {
+        Set(current.facts.filter(\.isPresent).map(\.category))
     }
 
     var body: some View {
@@ -58,10 +69,10 @@ struct MealDetailView: View {
             Section {
                 detailRow(
                     "When",
-                    value: meal.consumedAt.formatted(date: .abbreviated, time: .shortened),
+                    value: current.consumedAt.formatted(date: .abbreviated, time: .shortened),
                     identifier: "detail.when"
                 )
-                if let checkIn = meal.checkIn {
+                if let checkIn = current.checkIn {
                     detailRow("How you felt", value: checkIn.severity.displayName, identifier: "detail.severity")
                     if !checkIn.symptoms.isEmpty {
                         detailRow(
@@ -80,8 +91,6 @@ struct MealDetailView: View {
                 } else {
                     Text("No check-in answer yet").foregroundStyle(.secondary)
                 }
-            } header: {
-                Text(meal.displayName).font(.title3.weight(.semibold))
             }
 
             if !confirmed.isEmpty {
@@ -99,7 +108,7 @@ struct MealDetailView: View {
             }
 
             if !shownRules.isEmpty {
-                Section("Notes shown at the time") {
+                Section {
                     ForEach(shownRules) { rule in
                         VStack(alignment: .leading, spacing: 6) {
                             Text(rule.title).font(.body.weight(.medium))
@@ -111,12 +120,18 @@ struct MealDetailView: View {
                         }
                         .padding(.vertical, 2)
                     }
+                } header: {
+                    Text("Notes shown at the time")
+                } footer: {
+                    // Otherwise removing an ingredient and seeing its note still
+                    // sitting here reads as a bug rather than as the record.
+                    Text("These are what you saw at the time. Changing a meal later does not rewrite them.")
                 }
             }
 
-            if !meal.corrections.isEmpty {
+            if !current.corrections.isEmpty {
                 Section("What you corrected") {
-                    ForEach(meal.corrections) { correction in
+                    ForEach(current.corrections) { correction in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(correction.field.displayName).font(.footnote.weight(.medium))
                             Text("\(correction.previousValue) → \(correction.newValue)")
@@ -129,30 +144,51 @@ struct MealDetailView: View {
             }
 
             Section {
-                if meal.provenance.usedManualEntry {
+                if current.provenance.usedManualEntry {
                     Text("You typed this in.")
                 } else {
-                    if let proposed = meal.provenance.proposedName {
+                    if let proposed = current.provenance.proposedName {
                         Text("The app suggested “\(proposed)”.")
                     }
-                    if meal.provenance.repairAttempted {
+                    if current.provenance.repairAttempted {
                         Text("The first reading was unusable, so it was asked for again.")
                             .foregroundStyle(.secondary)
                     }
                 }
-                ForEach(meal.provenance.limitations, id: \.self) { limitation in
+                ForEach(current.provenance.limitations, id: \.self) { limitation in
                     Text(limitation).font(.footnote).foregroundStyle(.secondary)
                 }
-                Text(meal.retainedPhoto ? "A photo was kept." : "No photo was kept.")
+                Text(current.retainedPhoto ? "A photo was kept." : "No photo was kept.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } header: {
                 Text("How this was identified")
             }
+
         }
-        .navigationTitle(meal.displayName)
+        .navigationTitle(current.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("meal.detail")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                // In the toolbar rather than at the foot of the list: this is the
+                // one thing she can *do* here, and it should not be below a
+                // screenful of provenance she has to scroll past to find.
+                Button("Change") { showingCorrection = true }
+                    .accessibilityIdentifier("detail.correct")
+                    .accessibilityHint("Corrects the name or ingredients, and what your patterns are counted from")
+            }
+        }
+        .sheet(isPresented: $showingCorrection) {
+            CorrectionView(
+                initialName: current.displayName,
+                initialCategories: presentCategories
+            ) { name, categories in
+                if let updated = environment.correctMeal(id: current.id, name: name, categories: categories) {
+                    corrected = updated
+                }
+            }
+        }
     }
 
     /// Read as one phrase by VoiceOver rather than as two disconnected fragments.

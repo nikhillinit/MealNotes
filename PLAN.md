@@ -64,7 +64,7 @@ require touching the rules engine.
 ## Verification
 
 ```sh
-make test        # 111 core tests + 16 app tests + 3 UI tests
+make test        # 111 core tests + 16 app tests + 4 UI tests
 make build       # iPhone 16 simulator, Debug
 ```
 

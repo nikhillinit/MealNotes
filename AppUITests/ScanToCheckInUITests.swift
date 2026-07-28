@@ -137,6 +137,53 @@ final class ScanToCheckInUITests: XCTestCase {
         )
     }
 
+    /// Correcting a meal after it is logged fixes what the patterns are counted
+    /// from, but must not rewrite the note she was actually shown at the time.
+    func testCorrectingALoggedMealKeepsTheNoteItShowedAtTheTime() throws {
+        tap(element("home.scanButton"))
+        tap(element("capture.fixture.caffeinatedTea"))
+
+        let yes = element("clarify.yes")
+        XCTAssertTrue(yes.waitForExistence(timeout: 15), "The clarification question should appear")
+        tap(yes)
+
+        XCTAssertTrue(element("result.confirm").waitForExistence(timeout: 10))
+        tap(element("result.confirm"))
+        XCTAssertTrue(element("logged.confirmation").waitForExistence(timeout: 10))
+        tap(element("logged.done"))
+
+        // Open it again from the history.
+        tap(element("home.history"))
+        XCTAssertTrue(app.staticTexts["Black tea"].waitForExistence(timeout: 10))
+        tap(app.staticTexts["Black tea"])
+        XCTAssertTrue(element("meal.detail").waitForExistence(timeout: 10), "The meal detail should open")
+
+        let note = "Caffeine can make reflux symptoms worse for some people."
+        XCTAssertTrue(app.staticTexts["What was in it"].exists, "Caffeine should be recorded on the meal")
+        XCTAssertTrue(app.staticTexts[note].exists, "The note should be on the record")
+
+        // It was decaf after all.
+        tap(element("detail.correct"))
+        let caffeine = element("correct.category.caffeine")
+        XCTAssertTrue(caffeine.waitForExistence(timeout: 10), "The same correction sheet should open")
+        tap(caffeine)
+        tap(element("correct.save"))
+
+        XCTAssertTrue(element("meal.detail").waitForExistence(timeout: 10), "The detail should come back")
+        XCTAssertTrue(
+            app.staticTexts["What you corrected"].waitForExistence(timeout: 5),
+            "The correction should be recorded on the meal"
+        )
+        XCTAssertFalse(
+            app.staticTexts["What was in it"].exists,
+            "Caffeine should no longer be counted as part of the meal"
+        )
+        XCTAssertTrue(
+            app.staticTexts[note].exists,
+            "The note she was shown at the time should survive the correction"
+        )
+    }
+
     // MARK: - Helpers
 
     /// Identifiers are attached to a mix of buttons, cells and containers

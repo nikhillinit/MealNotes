@@ -83,9 +83,14 @@ struct CheckInView: View {
                             }
                         }
                     } header: {
-                        Text("Anything else?")
+                        // The list that matters most had the vaguest label. Heading,
+                        // icon and words together, never colour alone.
+                        Label("Worth mentioning to a doctor", systemImage: "stethoscope")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .accessibilityAddTraits(.isHeader)
                     } footer: {
-                        Text("These are worth mentioning to a doctor rather than only noting here.")
+                        Text("Recording one of these here is not the same as getting it looked at.")
                     }
                 }
             }
